@@ -1,0 +1,42 @@
+﻿QMainWindow {
+    background: #f3f5f8;
+}
+
+QGroupBox {
+    border: 1px solid #cfd6df;
+    border-radius: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    background: #ffffff;
+    font-weight: 600;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 12px;
+    padding: 0 4px;
+}
+
+QPlainTextEdit, QLineEdit, QComboBox, QListWidget, QSpinBox {
+    border: 1px solid #b9c3d0;
+    border-radius: 6px;
+    padding: 5px;
+    background: #ffffff;
+}
+
+QPushButton, QToolButton {
+    background: #1f5eff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    min-height: 28px;
+}
+
+QPushButton:hover, QToolButton:hover {
+    background: #184bd0;
+}
+
+QStatusBar {
+    background: #e9edf2;
+}
