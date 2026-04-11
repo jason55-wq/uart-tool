@@ -14,7 +14,7 @@ def encode_payload(payload: str, mode: SendMode) -> bytes:
     try:
         return bytes.fromhex(normalized)
     except ValueError as exc:
-        raise ValueError("HEX mode expects space-separated hexadecimal bytes.") from exc
+        raise ValueError("HEX 模式請輸入以空白分隔的十六進位位元組。") from exc
 
 
 def bytes_to_ascii(payload: bytes) -> str:

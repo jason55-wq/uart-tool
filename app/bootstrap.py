@@ -21,7 +21,7 @@ def _load_stylesheet() -> str:
 
 def main() -> int:
     app = QApplication(sys.argv)
-    app.setApplicationName("UART Serial Monitor")
+    app.setApplicationName("UART 序列監控器")
     app.setOrganizationName("CodexLab")
     app.setStyleSheet(_load_stylesheet())
 
