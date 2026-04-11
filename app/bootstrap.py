@@ -15,8 +15,13 @@ from ui.main_window import MainWindow
 
 
 def _load_stylesheet() -> str:
-    qss_path = Path(__file__).resolve().parent.parent / "resources" / "styles.qss"
-    return qss_path.read_text(encoding="utf-8") if qss_path.exists() else ""
+    resources_dir = Path(__file__).resolve().parent.parent / "resources"
+    qss_path = resources_dir / "styles.qss"
+    if not qss_path.exists():
+        return ""
+    stylesheet = qss_path.read_text(encoding="utf-8")
+    bg_path = (resources_dir / "cartoon_bg.svg").as_uri()
+    return stylesheet.replace('url("cartoon_bg.svg")', f'url("{bg_path}")')
 
 
 def main() -> int:

@@ -1,42 +1,92 @@
-﻿QMainWindow {
-    background: #f3f5f8;
+QMainWindow {
+    background-color: #f7f4ff;
+    background-image: url("cartoon_bg.svg");
+    background-repeat: repeat;
+    background-position: center;
 }
 
 QGroupBox {
-    border: 1px solid #cfd6df;
-    border-radius: 8px;
-    margin-top: 12px;
-    padding-top: 12px;
-    background: #ffffff;
+    border: 2px solid #7fb8ff;
+    border-radius: 14px;
+    margin-top: 14px;
+    padding-top: 14px;
+    background: rgba(255, 255, 255, 235);
     font-weight: 600;
+    color: #2f3c57;
 }
 
 QGroupBox::title {
     subcontrol-origin: margin;
-    left: 12px;
-    padding: 0 4px;
+    left: 14px;
+    padding: 0 8px;
+    color: #2f6fd4;
 }
 
 QPlainTextEdit, QLineEdit, QComboBox, QListWidget, QSpinBox {
-    border: 1px solid #b9c3d0;
-    border-radius: 6px;
-    padding: 5px;
+    border: 2px solid #b8d7ff;
+    border-radius: 10px;
+    padding: 6px 8px;
     background: #ffffff;
+    color: #2f3c57;
+    selection-background-color: #ffd56a;
 }
 
 QPushButton, QToolButton {
-    background: #1f5eff;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #8bd3ff, stop:1 #4f8df7);
     color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 6px 12px;
-    min-height: 28px;
+    border: 2px solid #2f6fd4;
+    border-radius: 12px;
+    padding: 6px 14px;
+    min-height: 30px;
+    font-weight: 600;
 }
 
 QPushButton:hover, QToolButton:hover {
-    background: #184bd0;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #9de0ff, stop:1 #5d99ff);
+}
+
+QPushButton:pressed, QToolButton:pressed {
+    background: #3d73d8;
 }
 
 QStatusBar {
-    background: #e9edf2;
+    background: #fff1c9;
+    color: #7b5b10;
+    border-top: 1px solid #f0d27a;
+}
+
+QCheckBox {
+    color: #2f3c57;
+}
+
+QSplitter::handle {
+    background: #d3e9ff;
+}
+
+QPlainTextEdit[readOnly="true"] {
+    background: #fefefe;
+}
+
+QScrollBar:vertical {
+    background: #eef7ff;
+    width: 12px;
+    margin: 12px 2px 12px 2px;
+    border-radius: 6px;
+}
+
+QScrollBar::handle:vertical {
+    background: #86bfff;
+    min-height: 28px;
+    border-radius: 6px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #67a8ff;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    background: transparent;
+    height: 0px;
 }
