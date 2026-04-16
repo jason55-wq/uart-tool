@@ -73,11 +73,11 @@ class SerialService(QObject):
 
     def open(self, config: SerialConfig) -> None:
         if not config.port:
-            raise ValueError("請先選擇串口。")
+            raise ValueError("Please select a serial port.")
         if self._serial and self._serial.is_open:
             self.close()
 
-        self._set_state(ConnectionState.CONNECTING, f"正在開啟 {config.port}...")
+        self._set_state(ConnectionState.CONNECTING, f"Opening {config.port}...")
         try:
             self._serial = serial.Serial(
                 port=config.port,
@@ -91,8 +91,8 @@ class SerialService(QObject):
             )
         except (serial.SerialException, KeyError) as exc:
             self._serial = None
-            self._set_state(ConnectionState.ERROR, "開啟失敗")
-            raise RuntimeError(f"開啟串口失敗：{exc}") from exc
+            self._set_state(ConnectionState.ERROR, "Open failed")
+            raise RuntimeError(f"Failed to open port: {exc}") from exc
 
         self.rx_bytes = 0
         self.tx_bytes = 0
@@ -104,7 +104,7 @@ class SerialService(QObject):
         self._worker.error_occurred.connect(self.error_occurred.emit)
         self._worker.disconnected.connect(self._on_worker_disconnected)
         self._thread.start()
-        self._set_state(ConnectionState.CONNECTED, "連線成功")
+        self._set_state(ConnectionState.CONNECTED, f"{config.port} connected")
 
     def close(self) -> None:
         if self._worker:
@@ -121,17 +121,17 @@ class SerialService(QObject):
                 self.error_occurred.emit(str(exc))
             self._serial = None
         self._worker = None
-        self._set_state(ConnectionState.DISCONNECTED, "串口已關閉")
+        self._set_state(ConnectionState.DISCONNECTED, "Port closed")
 
     def send(self, payload: bytes) -> None:
         if not self._serial or not self._serial.is_open:
-            raise RuntimeError("串口尚未開啟。")
+            raise RuntimeError("Serial port is not open.")
         try:
             written = self._serial.write(payload)
             self.tx_bytes += written
             self.data_sent.emit(SerialEvent(direction="TX", payload=payload[:written]))
         except serial.SerialException as exc:
-            raise RuntimeError(f"發送資料失敗：{exc}") from exc
+            raise RuntimeError(f"Failed to send data: {exc}") from exc
 
     def _on_data_received(self, payload: bytes) -> None:
         self.rx_bytes += len(payload)
@@ -139,8 +139,8 @@ class SerialService(QObject):
 
     def _on_worker_disconnected(self, message: str) -> None:
         self.close()
-        self._set_state(ConnectionState.ERROR, "裝置已中斷連線")
-        self.error_occurred.emit(f"串口裝置已中斷連線：{message}")
+        self._set_state(ConnectionState.ERROR, "Device disconnected")
+        self.error_occurred.emit(f"Serial device disconnected: {message}")
 
     def _set_state(self, state: ConnectionState, reason: str) -> None:
         self._state = state

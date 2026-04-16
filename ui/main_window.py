@@ -37,27 +37,6 @@ from ui.template_dialog import TemplateEditDialog
 class MainWindow(QMainWindow):
     """Main product window for UART monitoring workflows."""
 
-    _DISPLAY_MODE_LABELS = {
-        DisplayMode.ASCII: "ASCII 顯示",
-        DisplayMode.HEX: "十六進位顯示",
-        DisplayMode.UTF8: "UTF-8 顯示",
-    }
-    _SEND_MODE_LABELS = {
-        SendMode.ASCII: "ASCII 文字",
-        SendMode.HEX: "十六進位",
-    }
-    _FLOW_CONTROL_LABELS = {
-        FlowControl.NONE: "無",
-        FlowControl.RTS_CTS: "RTS/CTS",
-        FlowControl.XON_XOFF: "XON/XOFF",
-    }
-    _CONNECTION_STATE_LABELS = {
-        ConnectionState.DISCONNECTED: "未連線",
-        ConnectionState.CONNECTING: "連線中",
-        ConnectionState.CONNECTED: "已連線",
-        ConnectionState.ERROR: "錯誤",
-    }
-
     refresh_requested = pyqtSignal()
     connect_requested = pyqtSignal()
     send_requested = pyqtSignal(str, SendMode)
@@ -74,7 +53,7 @@ class MainWindow(QMainWindow):
 
     def __init__(self) -> None:
         super().__init__()
-        self.setWindowTitle("UART 序列監控器")
+        self.setWindowTitle("UART Serial Monitor")
         self.resize(1280, 820)
         self._messages: list[SerialEvent] = []
         self._history: list[str] = []
@@ -105,11 +84,11 @@ class MainWindow(QMainWindow):
         self.newline_combo.currentTextChanged.connect(lambda _: self.reformat_messages(self.current_display_mode()))
 
     def _build_connection_panel(self) -> QWidget:
-        box = QGroupBox("連線設定")
+        box = QGroupBox("Connection")
         layout = QGridLayout(box)
 
         self.port_combo = QComboBox()
-        self.refresh_button = QToolButton(text="重新整理")
+        self.refresh_button = QToolButton(text="Refresh")
         self.refresh_button.clicked.connect(self.refresh_requested.emit)
 
         self.baud_combo = QComboBox()
@@ -127,24 +106,23 @@ class MainWindow(QMainWindow):
         self.stop_bits_combo.addItems(["1", "1.5", "2"])
 
         self.flow_control_combo = QComboBox()
-        for item, label in self._FLOW_CONTROL_LABELS.items():
-            self.flow_control_combo.addItem(label, item.value)
+        self.flow_control_combo.addItems([item.value for item in FlowControl])
 
-        self.connect_button = QPushButton("開啟")
+        self.connect_button = QPushButton("Open")
         self.connect_button.clicked.connect(self.connect_requested.emit)
 
-        layout.addWidget(QLabel("埠號"), 0, 0)
+        layout.addWidget(QLabel("Port"), 0, 0)
         layout.addWidget(self.port_combo, 0, 1)
         layout.addWidget(self.refresh_button, 0, 2)
-        layout.addWidget(QLabel("鮑率"), 0, 3)
+        layout.addWidget(QLabel("Baud"), 0, 3)
         layout.addWidget(self.baud_combo, 0, 4)
-        layout.addWidget(QLabel("資料位元"), 0, 5)
+        layout.addWidget(QLabel("Data Bits"), 0, 5)
         layout.addWidget(self.data_bits_combo, 0, 6)
-        layout.addWidget(QLabel("同位元"), 1, 0)
+        layout.addWidget(QLabel("Parity"), 1, 0)
         layout.addWidget(self.parity_combo, 1, 1)
-        layout.addWidget(QLabel("停止位元"), 1, 2)
+        layout.addWidget(QLabel("Stop Bits"), 1, 2)
         layout.addWidget(self.stop_bits_combo, 1, 3)
-        layout.addWidget(QLabel("流量控制"), 1, 4)
+        layout.addWidget(QLabel("Flow Control"), 1, 4)
         layout.addWidget(self.flow_control_combo, 1, 5)
         layout.addWidget(self.connect_button, 1, 6)
         return box
@@ -158,44 +136,41 @@ class MainWindow(QMainWindow):
         return splitter
 
     def _build_receive_panel(self) -> QWidget:
-        box = QGroupBox("接收監看")
+        box = QGroupBox("Receive Monitor")
         layout = QVBoxLayout(box)
 
         toolbar = QHBoxLayout()
         self.display_mode_combo = QComboBox()
-        for item, label in self._DISPLAY_MODE_LABELS.items():
-            self.display_mode_combo.addItem(label, item.value)
-        self.display_mode_combo.currentIndexChanged.connect(
-            lambda _: self.display_mode_changed.emit(self.current_display_mode())
+        self.display_mode_combo.addItems([item.value for item in DisplayMode])
+        self.display_mode_combo.currentTextChanged.connect(
+            lambda value: self.display_mode_changed.emit(DisplayMode(value))
         )
 
-        self.timestamp_check = QCheckBox("時間戳記")
+        self.timestamp_check = QCheckBox("Timestamp")
         self.timestamp_check.setChecked(True)
-        self.direction_check = QCheckBox("收發標記")
+        self.direction_check = QCheckBox("RX/TX")
         self.direction_check.setChecked(True)
-        self.auto_scroll_check = QCheckBox("自動捲動")
+        self.auto_scroll_check = QCheckBox("Auto Scroll")
         self.auto_scroll_check.setChecked(True)
-        self.log_check = QCheckBox("記錄日誌")
+        self.log_check = QCheckBox("Record Log")
         self.log_check.toggled.connect(self.logging_toggled.emit)
 
         self.newline_combo = QComboBox()
-        self.newline_combo.addItem("換行 (LF)", "\n")
-        self.newline_combo.addItem("回車換行 (CRLF)", "\r\n")
-        self.newline_combo.addItem("無", "none")
+        self.newline_combo.addItems(["\\n", "\\r\\n", "none"])
 
         self.search_edit = QLineEdit()
-        self.search_edit.setPlaceholderText("搜尋 / 標示")
+        self.search_edit.setPlaceholderText("Search / highlight")
         self.search_edit.textChanged.connect(self.search_requested.emit)
 
-        self.clear_button = QPushButton("清除")
+        self.clear_button = QPushButton("Clear")
         self.clear_button.clicked.connect(self.clear_requested.emit)
 
-        toolbar.addWidget(QLabel("顯示"))
+        toolbar.addWidget(QLabel("Display"))
         toolbar.addWidget(self.display_mode_combo)
         toolbar.addWidget(self.timestamp_check)
         toolbar.addWidget(self.direction_check)
         toolbar.addWidget(self.auto_scroll_check)
-        toolbar.addWidget(QLabel("換行格式"))
+        toolbar.addWidget(QLabel("Line End"))
         toolbar.addWidget(self.newline_combo)
         toolbar.addWidget(self.log_check)
         toolbar.addStretch(1)
@@ -211,17 +186,17 @@ class MainWindow(QMainWindow):
         return box
 
     def _build_template_panel(self) -> QWidget:
-        box = QGroupBox("命令模板")
+        box = QGroupBox("Command Templates")
         layout = QVBoxLayout(box)
 
         self.template_list = QListWidget()
         self.template_list.itemDoubleClicked.connect(lambda _: self._emit_selected_template_send())
 
         buttons = QHBoxLayout()
-        add_button = QPushButton("新增")
-        edit_button = QPushButton("編輯")
-        delete_button = QPushButton("刪除")
-        send_button = QPushButton("送出")
+        add_button = QPushButton("Add")
+        edit_button = QPushButton("Edit")
+        delete_button = QPushButton("Delete")
+        send_button = QPushButton("Send")
         add_button.clicked.connect(self.template_add_requested.emit)
         edit_button.clicked.connect(self._emit_selected_template_edit)
         delete_button.clicked.connect(self._emit_selected_template_delete)
@@ -237,33 +212,32 @@ class MainWindow(QMainWindow):
         return box
 
     def _build_sender_panel(self) -> QWidget:
-        box = QGroupBox("發送")
+        box = QGroupBox("Send")
         layout = QVBoxLayout(box)
 
         row1 = QHBoxLayout()
         self.send_mode_combo = QComboBox()
-        for item, label in self._SEND_MODE_LABELS.items():
-            self.send_mode_combo.addItem(label, item.value)
-        self.enter_send_check = QCheckBox("Enter 送出")
+        self.send_mode_combo.addItems([item.value for item in SendMode])
+        self.enter_send_check = QCheckBox("Enter to Send")
         self.history_combo = QComboBox()
         self.history_combo.setEditable(False)
         self.history_combo.currentTextChanged.connect(self._load_history_to_editor)
 
-        row1.addWidget(QLabel("模式"))
+        row1.addWidget(QLabel("Mode"))
         row1.addWidget(self.send_mode_combo)
         row1.addWidget(self.enter_send_check)
-        row1.addWidget(QLabel("歷史紀錄"))
+        row1.addWidget(QLabel("History"))
         row1.addWidget(self.history_combo, stretch=1)
 
         row2 = QHBoxLayout()
         self.send_text = QPlainTextEdit()
-        self.send_text.setPlaceholderText("請在這裡輸入資料內容")
+        self.send_text.setPlaceholderText("Type payload here")
         self.send_text.setFixedHeight(110)
 
         right_box = QVBoxLayout()
-        self.send_button = QPushButton("立即送出")
+        self.send_button = QPushButton("Send Now")
         self.send_button.clicked.connect(self._emit_send)
-        self.periodic_check = QCheckBox("週期發送")
+        self.periodic_check = QCheckBox("Periodic")
         self.periodic_check.toggled.connect(self._emit_periodic_toggle)
         self.periodic_spin = QSpinBox()
         self.periodic_spin.setRange(10, 60000)
@@ -283,10 +257,10 @@ class MainWindow(QMainWindow):
 
     def _build_status_bar(self) -> None:
         status = QStatusBar()
-        self.connection_label = QLabel("未連線")
-        self.counter_label = QLabel("RX 0 B | TX 0 B | RX 封包 0 | TX 封包 0")
-        self.mode_label = QLabel("顯示：ASCII 顯示")
-        self.logging_label = QLabel("日誌關閉")
+        self.connection_label = QLabel("Disconnected")
+        self.counter_label = QLabel("RX 0 B | TX 0 B | RX pkt 0 | TX pkt 0")
+        self.mode_label = QLabel("Display ASCII")
+        self.logging_label = QLabel("Log Off")
         status.addPermanentWidget(self.connection_label)
         status.addPermanentWidget(self.counter_label)
         status.addPermanentWidget(self.mode_label)
@@ -300,7 +274,7 @@ class MainWindow(QMainWindow):
             data_bits=int(self.data_bits_combo.currentText()),
             parity=self.parity_combo.currentText(),
             stop_bits=float(self.stop_bits_combo.currentText()),
-            flow_control=FlowControl(self.flow_control_combo.currentData() or self.flow_control_combo.currentText()),
+            flow_control=FlowControl(self.flow_control_combo.currentText()),
         )
 
     def populate_serial_config(self, config: SerialConfig) -> None:
@@ -310,7 +284,7 @@ class MainWindow(QMainWindow):
         self._set_combo_text(self.parity_combo, config.parity)
         stop_bits_text = str(config.stop_bits).rstrip("0").rstrip(".")
         self._set_combo_text(self.stop_bits_combo, stop_bits_text)
-        self._set_combo_value(self.flow_control_combo, config.flow_control.value)
+        self._set_combo_text(self.flow_control_combo, config.flow_control.value)
 
     def refresh_ports(self, ports: list[str]) -> None:
         current = self.port_combo.currentText()
@@ -343,33 +317,32 @@ class MainWindow(QMainWindow):
         self.receive_text.clear()
 
     def current_display_mode(self) -> DisplayMode:
-        return DisplayMode(self.display_mode_combo.currentData() or DisplayMode.ASCII.value)
+        return DisplayMode(self.display_mode_combo.currentText())
 
     def current_view_options(self) -> dict:
         return {
             "show_timestamp": self.timestamp_check.isChecked(),
             "show_direction": self.direction_check.isChecked(),
-            "newline": self.newline_combo.currentData() or "\n",
+            "newline": self.newline_combo.currentText(),
         }
 
     def periodic_payload(self) -> tuple[str, SendMode]:
-        return self.send_text.toPlainText(), SendMode(self.send_mode_combo.currentData() or SendMode.ASCII.value)
+        return self.send_text.toPlainText(), SendMode(self.send_mode_combo.currentText())
 
     def update_connection_state(self, state: ConnectionState, reason: str = "") -> None:
-        label = self._CONNECTION_STATE_LABELS[state]
-        self.connection_label.setText(label if not reason else f"{label}：{reason}")
-        self.connect_button.setText("關閉" if state == ConnectionState.CONNECTED else "開啟")
+        self.connection_label.setText(state.value if not reason else f"{state.value}: {reason}")
+        self.connect_button.setText("Close" if state == ConnectionState.CONNECTED else "Open")
 
     def update_counters(self, rx_bytes: int, tx_bytes: int, rx_packets: int, tx_packets: int) -> None:
         self.counter_label.setText(
-            f"RX {rx_bytes} B | TX {tx_bytes} B | RX 封包 {rx_packets} | TX 封包 {tx_packets}"
+            f"RX {rx_bytes} B | TX {tx_bytes} B | RX pkt {rx_packets} | TX pkt {tx_packets}"
         )
 
     def update_display_mode(self, mode: DisplayMode) -> None:
-        self.mode_label.setText(f"顯示：{self._DISPLAY_MODE_LABELS[mode]}")
+        self.mode_label.setText(f"Display {mode.value}")
 
     def update_logging_state(self, enabled: bool) -> None:
-        self.logging_label.setText("日誌開啟" if enabled else "日誌關閉")
+        self.logging_label.setText("Log On" if enabled else "Log Off")
         self.log_check.blockSignals(True)
         self.log_check.setChecked(enabled)
         self.log_check.blockSignals(False)
@@ -418,39 +391,37 @@ class MainWindow(QMainWindow):
     def confirm_template_delete(self, template_name: str) -> bool:
         answer = QMessageBox.question(
             self,
-            "刪除模板",
-            f"要刪除模板「{template_name}」嗎？",
+            "Delete Template",
+            f"Delete template '{template_name}'?",
         )
         return answer == QMessageBox.StandardButton.Yes
 
     def load_template_to_sender(self, template: CommandTemplate) -> None:
         self.send_text.setPlainText(template.payload)
-        self._set_combo_value(self.send_mode_combo, template.mode.value)
+        self.send_mode_combo.setCurrentText(template.mode.value)
 
     def apply_settings(self, state: dict) -> None:
         if geometry := state.get("geometry"):
             self.restoreGeometry(QByteArray.fromHex(geometry.encode("ascii")))
-        self._set_combo_value(self.display_mode_combo, state.get("display_mode", DisplayMode.ASCII.value))
-        self._set_combo_value(self.send_mode_combo, state.get("send_mode", SendMode.ASCII.value))
+        self.display_mode_combo.setCurrentText(state.get("display_mode", DisplayMode.ASCII.value))
+        self.send_mode_combo.setCurrentText(state.get("send_mode", SendMode.ASCII.value))
         self.enter_send_check.setChecked(bool(state.get("enter_send", False)))
         self.timestamp_check.setChecked(bool(state.get("show_timestamp", True)))
         self.direction_check.setChecked(bool(state.get("show_direction", True)))
         self.auto_scroll_check.setChecked(bool(state.get("auto_scroll", True)))
-        newline = state.get("newline", "\n")
-        newline = {"\\n": "\n", "\\r\\n": "\r\n"}.get(newline, newline)
-        self._set_combo_value(self.newline_combo, newline)
+        self.newline_combo.setCurrentText(state.get("newline", "\\n"))
         self.periodic_spin.setValue(int(state.get("periodic_interval", 1000)))
 
     def collect_ui_state(self) -> dict:
         return {
             "geometry": bytes(self.saveGeometry().toHex()).decode("ascii"),
-            "display_mode": self.display_mode_combo.currentData() or DisplayMode.ASCII.value,
-            "send_mode": self.send_mode_combo.currentData() or SendMode.ASCII.value,
+            "display_mode": self.display_mode_combo.currentText(),
+            "send_mode": self.send_mode_combo.currentText(),
             "enter_send": self.enter_send_check.isChecked(),
             "show_timestamp": self.timestamp_check.isChecked(),
             "show_direction": self.direction_check.isChecked(),
             "auto_scroll": self.auto_scroll_check.isChecked(),
-            "newline": self.newline_combo.currentData() or "\n",
+            "newline": self.newline_combo.currentText(),
             "periodic_interval": self.periodic_spin.value(),
         }
 
@@ -486,10 +457,7 @@ class MainWindow(QMainWindow):
         super().keyPressEvent(event)
 
     def _emit_send(self) -> None:
-        self.send_requested.emit(
-            self.send_text.toPlainText(),
-            SendMode(self.send_mode_combo.currentData() or SendMode.ASCII.value),
-        )
+        self.send_requested.emit(self.send_text.toPlainText(), SendMode(self.send_mode_combo.currentText()))
 
     def _emit_periodic_toggle(self, checked: bool) -> None:
         self.periodic_send_toggled.emit(checked, self.periodic_spin.value())
@@ -521,12 +489,4 @@ class MainWindow(QMainWindow):
         elif value:
             combo.addItem(value)
             combo.setCurrentText(value)
-
-    @staticmethod
-    def _set_combo_value(combo: QComboBox, value: str) -> None:
-        for index in range(combo.count()):
-            if combo.itemData(index) == value:
-                combo.setCurrentIndex(index)
-                return
-        MainWindow._set_combo_text(combo, value)
 

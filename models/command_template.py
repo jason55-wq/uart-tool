@@ -11,7 +11,7 @@ class CommandTemplate:
     name: str
     payload: str
     mode: SendMode = SendMode.ASCII
-    category: str = "一般"
+    category: str = "General"
     template_id: str = field(default_factory=lambda: str(uuid4()))
 
     def to_dict(self) -> dict:
@@ -25,7 +25,7 @@ class CommandTemplate:
             name=data["name"],
             payload=data["payload"],
             mode=SendMode(data.get("mode", SendMode.ASCII.value)),
-            category=data.get("category", "一般"),
+            category=data.get("category", "General"),
             template_id=data.get("template_id", str(uuid4())),
         )
 
