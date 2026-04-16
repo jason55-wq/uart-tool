@@ -22,23 +22,24 @@ class TemplateEditDialog(QDialog):
 
     def __init__(self, parent=None, template: Optional[CommandTemplate] = None) -> None:
         super().__init__(parent)
-        self.setWindowTitle("Command Template")
+        self.setWindowTitle("命令模板")
         self._template = template
 
         self.name_edit = QLineEdit(template.name if template else "")
-        self.category_edit = QLineEdit(template.category if template else "General")
+        self.category_edit = QLineEdit(template.category if template else "一般")
         self.mode_combo = QComboBox()
-        self.mode_combo.addItems([SendMode.ASCII.value, SendMode.HEX.value])
+        self.mode_combo.addItem("ASCII 文字", SendMode.ASCII.value)
+        self.mode_combo.addItem("十六進位", SendMode.HEX.value)
         if template:
-            self.mode_combo.setCurrentText(template.mode.value)
+            self._set_combo_value(self.mode_combo, template.mode.value)
         self.payload_edit = QPlainTextEdit(template.payload if template else "")
-        self.payload_edit.setPlaceholderText("Enter ASCII text or HEX bytes")
+        self.payload_edit.setPlaceholderText("請輸入 ASCII 文字或 HEX 位元組")
 
         form = QFormLayout()
-        form.addRow("Name", self.name_edit)
-        form.addRow("Category", self.category_edit)
-        form.addRow("Mode", self.mode_combo)
-        form.addRow("Payload", self.payload_edit)
+        form.addRow("名稱", self.name_edit)
+        form.addRow("分類", self.category_edit)
+        form.addRow("模式", self.mode_combo)
+        form.addRow("內容", self.payload_edit)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
@@ -53,10 +54,10 @@ class TemplateEditDialog(QDialog):
 
     def accept(self) -> None:
         if not self.name_edit.text().strip():
-            QMessageBox.warning(self, "Template", "Template name is required.")
+            QMessageBox.warning(self, "模板", "必須輸入模板名稱。")
             return
         if not self.payload_edit.toPlainText().strip():
-            QMessageBox.warning(self, "Template", "Payload is required.")
+            QMessageBox.warning(self, "模板", "必須輸入內容。")
             return
         super().accept()
 
@@ -64,11 +65,18 @@ class TemplateEditDialog(QDialog):
         template_id = self._template.template_id if self._template else None
         kwargs = {
             "name": self.name_edit.text().strip(),
-            "category": self.category_edit.text().strip() or "General",
+            "category": self.category_edit.text().strip() or "一般",
             "payload": self.payload_edit.toPlainText(),
-            "mode": SendMode(self.mode_combo.currentText()),
+            "mode": SendMode(self.mode_combo.currentData() or SendMode.ASCII.value),
         }
         if template_id:
             kwargs["template_id"] = template_id
         return CommandTemplate(**kwargs)
+
+    @staticmethod
+    def _set_combo_value(combo: QComboBox, value: str) -> None:
+        for index in range(combo.count()):
+            if combo.itemData(index) == value:
+                combo.setCurrentIndex(index)
+                return
 

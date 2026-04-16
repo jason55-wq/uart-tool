@@ -101,7 +101,7 @@ class MainController(QObject):
 
     def send_once(self, payload: str, mode: SendMode) -> None:
         if self.serial_service.connection_state != ConnectionState.CONNECTED:
-            self._handle_error("Serial port is not connected.")
+            self._handle_error("串口尚未連線。")
             return
 
         try:
@@ -157,7 +157,7 @@ class MainController(QObject):
 
     def _handle_error(self, message: str) -> None:
         self.window.status_message(message)
-        QMessageBox.warning(self.window, "UART Monitor", message)
+        QMessageBox.warning(self.window, "UART 序列監控器", message)
 
     def _handle_connection_state(self, state: ConnectionState, reason: str) -> None:
         self._state = state
