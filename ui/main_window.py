@@ -19,7 +19,6 @@ from PyQt6.QtWidgets import (
     QPlainTextEdit,
     QPushButton,
     QSpinBox,
-    QSplitter,
     QStatusBar,
     QTextEdit,
     QToolButton,
@@ -78,10 +77,12 @@ class MainWindow(QMainWindow):
         self.resize(1280, 820)
         self._messages: list[SerialEvent] = []
         self._history: list[str] = []
+        self._advanced_widgets: list[QWidget] = []
         self._controller = None
 
         self._build_ui()
         self._build_status_bar()
+        self._set_advanced_visibility(False)
         self._bind_reformat_triggers()
 
     def set_controller(self, controller) -> None:
@@ -94,10 +95,23 @@ class MainWindow(QMainWindow):
         root_layout.setSpacing(10)
 
         root_layout.addWidget(self._build_connection_panel())
+        root_layout.addWidget(self._build_advanced_toggle_row())
         root_layout.addWidget(self._build_center_panel(), stretch=1)
         root_layout.addWidget(self._build_sender_panel())
 
         self.setCentralWidget(root)
+
+    def _build_advanced_toggle_row(self) -> QWidget:
+        row = QWidget()
+        layout = QHBoxLayout(row)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addStretch(1)
+
+        self.advanced_toggle_button = QToolButton(text="顯示進階功能")
+        self.advanced_toggle_button.setCheckable(True)
+        self.advanced_toggle_button.toggled.connect(self._set_advanced_visibility)
+        layout.addWidget(self.advanced_toggle_button)
+        return row
 
     def _bind_reformat_triggers(self) -> None:
         self.timestamp_check.toggled.connect(lambda _: self.reformat_messages(self.current_display_mode()))
@@ -150,18 +164,19 @@ class MainWindow(QMainWindow):
         return box
 
     def _build_center_panel(self) -> QWidget:
-        splitter = QSplitter(Qt.Orientation.Horizontal)
-        splitter.addWidget(self._build_receive_panel())
-        splitter.addWidget(self._build_template_panel())
-        splitter.setStretchFactor(0, 4)
-        splitter.setStretchFactor(1, 2)
-        return splitter
+        container = QWidget()
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(10)
+
+        layout.addWidget(self._build_receive_panel(), stretch=1)
+        layout.addWidget(self._build_template_panel())
+        return container
 
     def _build_receive_panel(self) -> QWidget:
         box = QGroupBox("接收監看")
         layout = QVBoxLayout(box)
 
-        toolbar = QHBoxLayout()
         self.display_mode_combo = QComboBox()
         for item, label in self._DISPLAY_MODE_LABELS.items():
             self.display_mode_combo.addItem(label, item.value)
@@ -169,12 +184,28 @@ class MainWindow(QMainWindow):
             lambda _: self.display_mode_changed.emit(self.current_display_mode())
         )
 
+        toolbar = QHBoxLayout()
+        toolbar.addWidget(QLabel("顯示"))
+        toolbar.addWidget(self.display_mode_combo)
+
+        self.auto_scroll_check = QCheckBox("自動捲動")
+        self.auto_scroll_check.setChecked(True)
+        toolbar.addWidget(self.auto_scroll_check)
+        toolbar.addStretch(1)
+
+        self.clear_button = QPushButton("清除")
+        self.clear_button.clicked.connect(self.clear_requested.emit)
+        toolbar.addWidget(self.clear_button)
+
+        advanced = QWidget()
+        advanced_layout = QHBoxLayout(advanced)
+        advanced_layout.setContentsMargins(0, 0, 0, 0)
+        advanced_layout.setSpacing(8)
+
         self.timestamp_check = QCheckBox("時間戳記")
         self.timestamp_check.setChecked(True)
         self.direction_check = QCheckBox("收發標記")
         self.direction_check.setChecked(True)
-        self.auto_scroll_check = QCheckBox("自動捲動")
-        self.auto_scroll_check.setChecked(True)
         self.log_check = QCheckBox("記錄日誌")
         self.log_check.toggled.connect(self.logging_toggled.emit)
 
@@ -187,27 +218,21 @@ class MainWindow(QMainWindow):
         self.search_edit.setPlaceholderText("搜尋 / 標示")
         self.search_edit.textChanged.connect(self.search_requested.emit)
 
-        self.clear_button = QPushButton("清除")
-        self.clear_button.clicked.connect(self.clear_requested.emit)
-
-        toolbar.addWidget(QLabel("顯示"))
-        toolbar.addWidget(self.display_mode_combo)
-        toolbar.addWidget(self.timestamp_check)
-        toolbar.addWidget(self.direction_check)
-        toolbar.addWidget(self.auto_scroll_check)
-        toolbar.addWidget(QLabel("換行格式"))
-        toolbar.addWidget(self.newline_combo)
-        toolbar.addWidget(self.log_check)
-        toolbar.addStretch(1)
-        toolbar.addWidget(self.search_edit)
-        toolbar.addWidget(self.clear_button)
+        advanced_layout.addWidget(self.timestamp_check)
+        advanced_layout.addWidget(self.direction_check)
+        advanced_layout.addWidget(QLabel("換行格式"))
+        advanced_layout.addWidget(self.newline_combo)
+        advanced_layout.addWidget(self.log_check)
+        advanced_layout.addWidget(self.search_edit, stretch=1)
 
         self.receive_text = QPlainTextEdit()
         self.receive_text.setReadOnly(True)
         self.receive_text.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
 
         layout.addLayout(toolbar)
+        layout.addWidget(advanced)
         layout.addWidget(self.receive_text, stretch=1)
+        self._advanced_widgets.append(advanced)
         return box
 
     def _build_template_panel(self) -> QWidget:
@@ -234,26 +259,12 @@ class MainWindow(QMainWindow):
 
         layout.addWidget(self.template_list)
         layout.addLayout(buttons)
+        self._advanced_widgets.append(box)
         return box
 
     def _build_sender_panel(self) -> QWidget:
         box = QGroupBox("發送")
         layout = QVBoxLayout(box)
-
-        row1 = QHBoxLayout()
-        self.send_mode_combo = QComboBox()
-        for item, label in self._SEND_MODE_LABELS.items():
-            self.send_mode_combo.addItem(label, item.value)
-        self.enter_send_check = QCheckBox("Enter 送出")
-        self.history_combo = QComboBox()
-        self.history_combo.setEditable(False)
-        self.history_combo.currentTextChanged.connect(self._load_history_to_editor)
-
-        row1.addWidget(QLabel("模式"))
-        row1.addWidget(self.send_mode_combo)
-        row1.addWidget(self.enter_send_check)
-        row1.addWidget(QLabel("歷史紀錄"))
-        row1.addWidget(self.history_combo, stretch=1)
 
         row2 = QHBoxLayout()
         self.send_text = QPlainTextEdit()
@@ -270,15 +281,36 @@ class MainWindow(QMainWindow):
         self.periodic_spin.setValue(1000)
         self.periodic_spin.setSuffix(" ms")
         right_box.addWidget(self.send_button)
-        right_box.addWidget(self.periodic_check)
-        right_box.addWidget(self.periodic_spin)
         right_box.addStretch(1)
 
         row2.addWidget(self.send_text, stretch=1)
         row2.addLayout(right_box)
 
-        layout.addLayout(row1)
+        advanced = QWidget()
+        advanced_layout = QHBoxLayout(advanced)
+        advanced_layout.setContentsMargins(0, 0, 0, 0)
+        advanced_layout.setSpacing(8)
+
+        self.send_mode_combo = QComboBox()
+        for item, label in self._SEND_MODE_LABELS.items():
+            self.send_mode_combo.addItem(label, item.value)
+        self.enter_send_check = QCheckBox("Enter 送出")
+        self.history_combo = QComboBox()
+        self.history_combo.setEditable(False)
+        self.history_combo.currentTextChanged.connect(self._load_history_to_editor)
+
+        advanced_layout.addWidget(QLabel("模式"))
+        advanced_layout.addWidget(self.send_mode_combo)
+        advanced_layout.addWidget(self.enter_send_check)
+        advanced_layout.addWidget(QLabel("歷史紀錄"))
+        advanced_layout.addWidget(self.history_combo, stretch=1)
+        advanced_layout.addWidget(QLabel("週期"))
+        advanced_layout.addWidget(self.periodic_check)
+        advanced_layout.addWidget(self.periodic_spin)
+
+        layout.addWidget(advanced)
         layout.addLayout(row2)
+        self._advanced_widgets.append(advanced)
         return box
 
     def _build_status_bar(self) -> None:
@@ -512,6 +544,15 @@ class MainWindow(QMainWindow):
     def _load_history_to_editor(self, value: str) -> None:
         if value:
             self.send_text.setPlainText(value)
+
+    def _set_advanced_visibility(self, visible: bool) -> None:
+        if hasattr(self, "advanced_toggle_button"):
+            self.advanced_toggle_button.blockSignals(True)
+            self.advanced_toggle_button.setText("隱藏進階功能" if visible else "顯示進階功能")
+            self.advanced_toggle_button.setChecked(visible)
+            self.advanced_toggle_button.blockSignals(False)
+        for widget in self._advanced_widgets:
+            widget.setVisible(visible)
 
     @staticmethod
     def _set_combo_text(combo: QComboBox, value: str) -> None:
