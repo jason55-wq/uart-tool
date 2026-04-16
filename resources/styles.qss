@@ -1,42 +1,266 @@
-﻿QMainWindow {
-    background: #f3f5f8;
+QWidget {
+    font-family: "Segoe UI", "Microsoft JhengHei UI", "Microsoft JhengHei", sans-serif;
+    color: #d6dde8;
+}
+
+QMainWindow {
+    background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1,
+                                stop: 0 #0b1118, stop: 1 #111a24);
+}
+
+#appHeader {
+    background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
+                                stop: 0 rgba(19, 29, 41, 0.96),
+                                stop: 1 rgba(31, 45, 61, 0.96));
+    border: 1px solid #253245;
+    border-radius: 16px;
+}
+
+#appTitle {
+    color: #f3f7fb;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+#appSubtitle {
+    color: #8fa0b5;
+    font-size: 12px;
+}
+
+#headerState {
+    color: #b8c6d8;
+    background: rgba(10, 16, 24, 0.6);
+    border: 1px solid #314256;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-weight: 600;
 }
 
 QGroupBox {
-    border: 1px solid #cfd6df;
-    border-radius: 8px;
-    margin-top: 12px;
-    padding-top: 12px;
-    background: #ffffff;
-    font-weight: 600;
+    background: rgba(16, 24, 34, 0.92);
+    border: 1px solid #273244;
+    border-radius: 16px;
+    margin-top: 18px;
+    padding: 14px 14px 12px 14px;
+    font-weight: 700;
+    color: #eef4fb;
 }
 
 QGroupBox::title {
     subcontrol-origin: margin;
-    left: 12px;
-    padding: 0 4px;
+    left: 14px;
+    top: -2px;
+    padding: 0 8px;
+    color: #f1f6fb;
+    background: rgba(16, 24, 34, 0.96);
 }
 
-QPlainTextEdit, QLineEdit, QComboBox, QListWidget, QSpinBox {
-    border: 1px solid #b9c3d0;
-    border-radius: 6px;
+QLabel {
+    color: #d5dde8;
+}
+
+QLineEdit,
+QPlainTextEdit,
+QComboBox,
+QSpinBox,
+QListWidget {
+    background: #0f1721;
+    border: 1px solid #2d3b4d;
+    border-radius: 10px;
+    padding: 8px 10px;
+    color: #edf4fb;
+    selection-background-color: #14b8a6;
+    selection-color: #061018;
+}
+
+QPlainTextEdit {
+    padding: 10px;
+}
+
+QLineEdit:focus,
+QPlainTextEdit:focus,
+QComboBox:focus,
+QSpinBox:focus,
+QListWidget:focus {
+    border: 1px solid #14b8a6;
+}
+
+QComboBox {
+    padding-right: 30px;
+}
+
+QComboBox::drop-down {
+    border: 0px;
+    width: 24px;
+}
+
+QComboBox::down-arrow {
+    width: 10px;
+    height: 10px;
+}
+
+QComboBox QAbstractItemView {
+    background: #111a24;
+    border: 1px solid #2d3b4d;
+    selection-background-color: #163c42;
+    selection-color: #edf4fb;
+    outline: 0;
+}
+
+QCheckBox {
+    spacing: 8px;
+    color: #d5dde8;
+}
+
+QCheckBox::indicator {
+    width: 15px;
+    height: 15px;
+    border-radius: 4px;
+    border: 1px solid #4b5d74;
+    background: #0f1721;
+}
+
+QCheckBox::indicator:hover {
+    border-color: #14b8a6;
+}
+
+QCheckBox::indicator:checked {
+    border: 1px solid #14b8a6;
+    background: #14b8a6;
+}
+
+QPushButton,
+QToolButton {
+    border: 1px solid #33465d;
+    border-radius: 10px;
+    padding: 8px 14px;
+    min-height: 30px;
+    font-weight: 700;
+    color: #dbe7f3;
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #243242, stop: 1 #17212d);
+}
+
+QPushButton:hover,
+QToolButton:hover {
+    border-color: #49637d;
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #2b3b4f, stop: 1 #1d2835);
+}
+
+QPushButton:pressed,
+QToolButton:pressed {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #151f2a, stop: 1 #101821);
+}
+
+QPushButton#primarySendButton {
+    border-color: #14b8a6;
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #1fa79a, stop: 1 #157f77);
+    color: #061118;
+    padding: 10px 18px;
+    min-height: 40px;
+    min-width: 120px;
+}
+
+QPushButton#primarySendButton:hover {
+    border-color: #4de0d1;
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #23c2b4, stop: 1 #159487);
+}
+
+QPushButton#connectButton {
+    border-color: #f59e0b;
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #d97706, stop: 1 #b45309);
+    color: #fff7ed;
+}
+
+QPushButton#connectButton:hover {
+    border-color: #fbbf24;
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #ea8b10, stop: 1 #c65f08);
+}
+
+QPushButton#dangerButton {
+    border-color: #ef4444;
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #8f1d24, stop: 1 #65161b);
+}
+
+QPushButton#dangerButton:hover {
+    border-color: #f87171;
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #a6212a, stop: 1 #7a1920);
+}
+
+QPushButton#ghostButton,
+QToolButton#ghostButton {
+    background: rgba(25, 35, 47, 0.95);
+    border-color: #33465d;
+    color: #dbe7f3;
+}
+
+QListWidget {
     padding: 5px;
-    background: #ffffff;
 }
 
-QPushButton, QToolButton {
-    background: #1f5eff;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 6px 12px;
-    min-height: 28px;
+QListWidget::item {
+    padding: 9px 10px;
+    margin: 2px 2px;
+    border-radius: 8px;
+    color: #e7eef7;
 }
 
-QPushButton:hover, QToolButton:hover {
-    background: #184bd0;
+QListWidget::item:selected {
+    background: rgba(20, 184, 166, 0.2);
+    color: #f4fbff;
+}
+
+QListWidget::item:hover {
+    background: rgba(148, 163, 184, 0.12);
 }
 
 QStatusBar {
-    background: #e9edf2;
+    background: rgba(10, 16, 24, 0.95);
+    border-top: 1px solid #253245;
+    color: #9fb0c3;
+}
+
+QStatusBar::item {
+    border: none;
+}
+
+QMenuBar {
+    background: transparent;
+}
+
+QMenuBar::item {
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: transparent;
+    color: #d6dde8;
+}
+
+QMenuBar::item:selected {
+    background: rgba(20, 184, 166, 0.18);
+}
+
+QMenu {
+    background: #111a24;
+    border: 1px solid #2d3b4d;
+    padding: 6px;
+    color: #edf4fb;
+}
+
+QMenu::item {
+    padding: 7px 18px;
+    border-radius: 6px;
+}
+
+QMenu::item:selected {
+    background: rgba(20, 184, 166, 0.18);
+    color: #f4fbff;
 }

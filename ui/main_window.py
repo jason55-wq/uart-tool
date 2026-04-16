@@ -91,15 +91,40 @@ class MainWindow(QMainWindow):
     def _build_ui(self) -> None:
         root = QWidget()
         root_layout = QVBoxLayout(root)
-        root_layout.setContentsMargins(12, 12, 12, 12)
-        root_layout.setSpacing(10)
+        root_layout.setContentsMargins(16, 16, 16, 16)
+        root_layout.setSpacing(12)
 
+        root_layout.addWidget(self._build_header())
         root_layout.addWidget(self._build_connection_panel())
         root_layout.addWidget(self._build_advanced_toggle_row())
         root_layout.addWidget(self._build_center_panel(), stretch=1)
         root_layout.addWidget(self._build_sender_panel())
 
         self.setCentralWidget(root)
+
+    def _build_header(self) -> QWidget:
+        header = QWidget()
+        header.setObjectName("appHeader")
+        layout = QHBoxLayout(header)
+        layout.setContentsMargins(18, 16, 18, 16)
+        layout.setSpacing(12)
+
+        title_box = QVBoxLayout()
+        title_box.setSpacing(2)
+        title = QLabel("UART 序列監控器")
+        title.setObjectName("appTitle")
+        subtitle = QLabel("工業控制視角 · 接收、發送、模板與記錄整合")
+        subtitle.setObjectName("appSubtitle")
+        title_box.addWidget(title)
+        title_box.addWidget(subtitle)
+
+        layout.addLayout(title_box)
+        layout.addStretch(1)
+
+        self.header_state_label = QLabel("未連線")
+        self.header_state_label.setObjectName("headerState")
+        layout.addWidget(self.header_state_label)
+        return header
 
     def _build_advanced_toggle_row(self) -> QWidget:
         row = QWidget()
@@ -121,9 +146,12 @@ class MainWindow(QMainWindow):
     def _build_connection_panel(self) -> QWidget:
         box = QGroupBox("連線設定")
         layout = QGridLayout(box)
+        layout.setHorizontalSpacing(10)
+        layout.setVerticalSpacing(10)
 
         self.port_combo = QComboBox()
         self.refresh_button = QToolButton(text="重新整理")
+        self.refresh_button.setObjectName("ghostButton")
         self.refresh_button.clicked.connect(self.refresh_requested.emit)
 
         self.baud_combo = QComboBox()
@@ -145,6 +173,7 @@ class MainWindow(QMainWindow):
             self.flow_control_combo.addItem(label, item.value)
 
         self.connect_button = QPushButton("開啟")
+        self.connect_button.setObjectName("connectButton")
         self.connect_button.clicked.connect(self.connect_requested.emit)
 
         layout.addWidget(QLabel("埠號"), 0, 0)
@@ -194,6 +223,7 @@ class MainWindow(QMainWindow):
         toolbar.addStretch(1)
 
         self.clear_button = QPushButton("清除")
+        self.clear_button.setObjectName("ghostButton")
         self.clear_button.clicked.connect(self.clear_requested.emit)
         toolbar.addWidget(self.clear_button)
 
@@ -243,10 +273,15 @@ class MainWindow(QMainWindow):
         self.template_list.itemDoubleClicked.connect(lambda _: self._emit_selected_template_send())
 
         buttons = QHBoxLayout()
+        buttons.setSpacing(8)
         add_button = QPushButton("新增")
         edit_button = QPushButton("編輯")
         delete_button = QPushButton("刪除")
         send_button = QPushButton("送出")
+        add_button.setObjectName("ghostButton")
+        edit_button.setObjectName("ghostButton")
+        delete_button.setObjectName("dangerButton")
+        send_button.setObjectName("ghostButton")
         add_button.clicked.connect(self.template_add_requested.emit)
         edit_button.clicked.connect(self._emit_selected_template_edit)
         delete_button.clicked.connect(self._emit_selected_template_delete)
@@ -265,31 +300,13 @@ class MainWindow(QMainWindow):
     def _build_sender_panel(self) -> QWidget:
         box = QGroupBox("發送")
         layout = QVBoxLayout(box)
-
-        row2 = QHBoxLayout()
-        self.send_text = QPlainTextEdit()
-        self.send_text.setPlaceholderText("請在這裡輸入資料內容")
-        self.send_text.setFixedHeight(110)
-
-        right_box = QVBoxLayout()
-        self.send_button = QPushButton("立即送出")
-        self.send_button.clicked.connect(self._emit_send)
-        self.periodic_check = QCheckBox("週期發送")
-        self.periodic_check.toggled.connect(self._emit_periodic_toggle)
-        self.periodic_spin = QSpinBox()
-        self.periodic_spin.setRange(10, 60000)
-        self.periodic_spin.setValue(1000)
-        self.periodic_spin.setSuffix(" ms")
-        right_box.addWidget(self.send_button)
-        right_box.addStretch(1)
-
-        row2.addWidget(self.send_text, stretch=1)
-        row2.addLayout(right_box)
+        layout.setSpacing(10)
 
         advanced = QWidget()
-        advanced_layout = QHBoxLayout(advanced)
+        advanced_layout = QGridLayout(advanced)
         advanced_layout.setContentsMargins(0, 0, 0, 0)
-        advanced_layout.setSpacing(8)
+        advanced_layout.setHorizontalSpacing(10)
+        advanced_layout.setVerticalSpacing(10)
 
         self.send_mode_combo = QComboBox()
         for item, label in self._SEND_MODE_LABELS.items():
@@ -298,15 +315,40 @@ class MainWindow(QMainWindow):
         self.history_combo = QComboBox()
         self.history_combo.setEditable(False)
         self.history_combo.currentTextChanged.connect(self._load_history_to_editor)
+        self.periodic_check = QCheckBox("週期發送")
+        self.periodic_check.toggled.connect(self._emit_periodic_toggle)
+        self.periodic_spin = QSpinBox()
+        self.periodic_spin.setRange(10, 60000)
+        self.periodic_spin.setValue(1000)
+        self.periodic_spin.setSuffix(" ms")
 
-        advanced_layout.addWidget(QLabel("模式"))
-        advanced_layout.addWidget(self.send_mode_combo)
-        advanced_layout.addWidget(self.enter_send_check)
-        advanced_layout.addWidget(QLabel("歷史紀錄"))
-        advanced_layout.addWidget(self.history_combo, stretch=1)
-        advanced_layout.addWidget(QLabel("週期"))
-        advanced_layout.addWidget(self.periodic_check)
-        advanced_layout.addWidget(self.periodic_spin)
+        advanced_layout.addWidget(QLabel("模式"), 0, 0)
+        advanced_layout.addWidget(self.send_mode_combo, 0, 1)
+        advanced_layout.addWidget(QLabel("歷史紀錄"), 0, 2)
+        advanced_layout.addWidget(self.history_combo, 0, 3)
+        advanced_layout.addWidget(self.enter_send_check, 1, 0)
+        advanced_layout.addWidget(self.periodic_check, 1, 1)
+        advanced_layout.addWidget(self.periodic_spin, 1, 2)
+        advanced_layout.setColumnStretch(3, 1)
+
+        action_row = QWidget()
+        action_layout = QVBoxLayout(action_row)
+        action_layout.setContentsMargins(0, 0, 0, 0)
+        action_layout.setSpacing(8)
+        self.send_text = QPlainTextEdit()
+        self.send_text.setPlaceholderText("請在這裡輸入資料內容")
+        self.send_text.setFixedHeight(116)
+
+        self.send_button = QPushButton("立即送出")
+        self.send_button.clicked.connect(self._emit_send)
+        self.send_button.setObjectName("primarySendButton")
+        action_layout.addWidget(self.send_button)
+        action_layout.addStretch(1)
+
+        row2 = QHBoxLayout()
+        row2.setSpacing(10)
+        row2.addWidget(self.send_text, stretch=1)
+        row2.addWidget(action_row)
 
         layout.addWidget(advanced)
         layout.addLayout(row2)
@@ -390,6 +432,8 @@ class MainWindow(QMainWindow):
     def update_connection_state(self, state: ConnectionState, reason: str = "") -> None:
         label = self._CONNECTION_STATE_LABELS[state]
         self.connection_label.setText(label if not reason else f"{label}：{reason}")
+        if hasattr(self, "header_state_label"):
+            self.header_state_label.setText(label if not reason else f"{label}：{reason}")
         self.connect_button.setText("關閉" if state == ConnectionState.CONNECTED else "開啟")
 
     def update_counters(self, rx_bytes: int, tx_bytes: int, rx_packets: int, tx_packets: int) -> None:
